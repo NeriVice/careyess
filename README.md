@@ -32,7 +32,7 @@ escritorio con X11 y GTK3.
 ## Instalación
 
 ```sh
-git clone https://github.com/TU_USUARIO/redshift-color.git
+git clone https://github.com/NeriVice/redshift-color.git
 cd redshift-color
 ./install.sh
 ```
