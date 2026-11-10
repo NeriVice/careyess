@@ -1,17 +1,17 @@
 [Desktop Entry]
 Type=Application
 Version=1.0
-Name=Careye
-Name[es]=Careye
+Name=Careyess
+Name[es]=Careyess
 GenericName=Color de pantalla
 GenericName[es]=Color de pantalla
 Comment=Ajusta el tono y el brillo de la pantalla (Redshift)
 Comment[es]=Ajusta el tono y el brillo de la pantalla (Redshift)
-Exec=careye
-TryExec=careye
-Icon=careye
+Exec=careyess
+TryExec=careyess
+Icon=careyess
 Terminal=false
 Categories=Settings;DesktopSettings;
-Keywords=careye;redshift;color;tono;luz;luz azul;filtro;temperatura;brillo;calido;noche;
+Keywords=careyess;redshift;color;tono;luz;luz azul;filtro;temperatura;brillo;calido;noche;
 StartupNotify=true
-StartupWMClass=careye
+StartupWMClass=careyess

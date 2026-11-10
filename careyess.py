@@ -1,6 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Careye — control gráfico de Redshift para Xfce.
+"""Careyess — control gráfico de Redshift para Xfce.
 
 Permite elegir la temperatura de color y el brillo de la pantalla y
 guardar el ajuste en ~/.config/redshift.conf para que Redshift lo
@@ -22,9 +22,9 @@ gi.require_version("Gdk", "3.0")
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gdk, GLib, Gtk  # noqa: E402
 
-__version__ = "1.1.0"
+__version__ = "1.2.0"
 
-APP_ID = "org.careye.Careye"
+APP_ID = "org.careyess.Careyess"
 CONF = os.environ.get(
     "REDSHIFT_CONF",
     os.path.join(
@@ -35,12 +35,12 @@ CONF = os.environ.get(
 
 
 def _find_launcher():
-    """Ruta del lanzador de una sola instancia que instala careye, o None."""
+    """Ruta del lanzador de una sola instancia que instala careyess, o None."""
     here = os.path.dirname(os.path.realpath(__file__))
     for candidate in (
-        os.path.join(here, "careye-redshift"),
-        os.path.expanduser("~/.local/bin/careye-redshift"),
-        "/usr/local/bin/careye-redshift",
+        os.path.join(here, "careyess-redshift"),
+        os.path.expanduser("~/.local/bin/careyess-redshift"),
+        "/usr/local/bin/careyess-redshift",
     ):
         if os.access(candidate, os.X_OK):
             return candidate
@@ -279,12 +279,12 @@ def describe(temp):
 # --------------------------------------------------------------------------
 # Interfaz
 # --------------------------------------------------------------------------
-class CareyeWindow(Gtk.ApplicationWindow):
+class CareyessWindow(Gtk.ApplicationWindow):
     def __init__(self, application, page=0):
-        super().__init__(application=application, title="Careye")
+        super().__init__(application=application, title="Careyess")
         self.set_default_size(560, 530)
         self.set_position(Gtk.WindowPosition.CENTER)
-        self.set_icon_name("careye")
+        self.set_icon_name("careyess")
 
         self._dirty = False
 
@@ -331,7 +331,7 @@ class CareyeWindow(Gtk.ApplicationWindow):
         header.set_margin_end(20)
 
         titles = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
-        title = Gtk.Label(label="Careye", xalign=0)
+        title = Gtk.Label(label="Careyess", xalign=0)
         title.get_style_context().add_class("app-title")
         subtitle = Gtk.Label(label="Filtro de luz azul · Redshift", xalign=0)
         subtitle.get_style_context().add_class("hint")
@@ -642,17 +642,17 @@ class CareyeWindow(Gtk.ApplicationWindow):
         return False
 
 
-class CareyeApp(Gtk.Application):
+class CareyessApp(Gtk.Application):
     def __init__(self, page=0):
         super().__init__(application_id=APP_ID)
-        GLib.set_prgname("careye")
-        GLib.set_application_name("Careye")
+        GLib.set_prgname("careyess")
+        GLib.set_application_name("Careyess")
         self.page = page
         self.window = None
 
     def do_activate(self):
         if self.window is None:
-            self.window = CareyeWindow(self, self.page)
+            self.window = CareyessWindow(self, self.page)
             self.window.connect("destroy", self._on_destroy)
             self.window.show_all()
             # La pestaña se elige ya mostrada: antes de mostrar, GTK la reinicia.
@@ -666,8 +666,8 @@ class CareyeApp(Gtk.Application):
 
 def main(argv=None):
     parser = argparse.ArgumentParser(
-        prog="careye",
-        description="Careye — filtro de luz azul (Redshift) con ventana GTK.",
+        prog="careyess",
+        description="Careyess — filtro de luz azul (Redshift) con ventana GTK.",
     )
     parser.add_argument(
         "--tab",
@@ -676,10 +676,10 @@ def main(argv=None):
         help="pestaña con la que abre: quick (ajuste rápido) o auto (automático)",
     )
     parser.add_argument(
-        "--version", action="version", version="careye {0}".format(__version__)
+        "--version", action="version", version="careyess {0}".format(__version__)
     )
     args = parser.parse_args(sys.argv[1:] if argv is None else argv)
-    return CareyeApp(0 if args.tab == "quick" else 1).run([])
+    return CareyessApp(0 if args.tab == "quick" else 1).run([])
 
 
 if __name__ == "__main__":

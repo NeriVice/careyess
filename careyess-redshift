@@ -1,8 +1,8 @@
 #!/bin/sh
-# careye-redshift — arranca Redshift una sola vez.
+# careyess-redshift — arranca Redshift una sola vez.
 #
 # Usa redshift-gtk si está instalado (bandeja del sistema). Si no, arranca
-# el propio redshift con la configuración que escribe la ventana de careye,
+# el propio redshift con la configuración que escribe la ventana de careyess,
 # así el filtro funciona aunque el paquete redshift-gtk no exista.
 set -eu
 
@@ -21,7 +21,7 @@ done
 
 RUNDIR="${XDG_RUNTIME_DIR:-/tmp}"
 [ -d "$RUNDIR" ] || RUNDIR=/tmp
-LOCK="$RUNDIR/careye-redshift-$(id -u).lock"
+LOCK="$RUNDIR/careyess-redshift-$(id -u).lock"
 exec 9>"$LOCK"
 flock -n 9 || exit 0
 

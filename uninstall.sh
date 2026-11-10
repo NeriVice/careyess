@@ -1,5 +1,5 @@
 #!/bin/sh
-# Desinstala careye (no toca ~/.config/redshift.conf).
+# Desinstala careyess (no toca ~/.config/redshift.conf).
 set -eu
 
 PREFIX=${PREFIX:-$HOME/.local}
@@ -9,13 +9,16 @@ APPS="$DATA_HOME/applications"
 ICONS="$DATA_HOME/icons/hicolor/scalable/apps"
 AUTOSTART="${XDG_CONFIG_HOME:-$HOME/.config}/autostart"
 
-rm -f "$BIN/careye" "$BIN/careye-redshift" \
-      "$APPS/careye.desktop" \
-      "$ICONS/careye.svg" \
-      "$AUTOSTART/careye-redshift.desktop"
+rm -f "$BIN/careyess" "$BIN/careyess-redshift" \
+      "$APPS/careyess.desktop" \
+      "$ICONS/careyess.svg" \
+      "$AUTOSTART/careyess-redshift.desktop"
 
-# Restos de la versión anterior, que se llamaba «Color de pantalla».
-rm -f "$BIN/redshift-color" "$BIN/redshift-gtk-single" \
+# Restos de nombres anteriores: careye y «Color de pantalla».
+rm -f "$BIN/careye" "$BIN/careye-redshift" \
+      "$APPS/careye.desktop" "$ICONS/careye.svg" \
+      "$AUTOSTART/careye-redshift.desktop" \
+      "$BIN/redshift-color" "$BIN/redshift-gtk-single" \
       "$APPS/redshift-color.desktop" \
       "$AUTOSTART/redshift-color.desktop"
 
@@ -26,4 +29,4 @@ if command -v gtk-update-icon-cache >/dev/null 2>&1; then
     gtk-update-icon-cache -qtf "$DATA_HOME/icons/hicolor" >/dev/null 2>&1 || true
 fi
 
-echo "careye desinstalado. Tu ~/.config/redshift.conf sigue intacto."
+echo "careyess desinstalado. Tu ~/.config/redshift.conf sigue intacto."

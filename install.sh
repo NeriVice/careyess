@@ -1,5 +1,5 @@
 #!/bin/sh
-# careye — instalador completo.
+# careyess — instalador completo.
 #
 # Instala lo que falta del sistema (Python 3, PyGObject/GTK3, Redshift y,
 # cuando existe, redshift-gtk), copia la aplicación, el icono, la entrada del
@@ -21,7 +21,7 @@ usage() {
     cat <<'EOF'
 Uso: ./install.sh [opciones]
 
-  --no-deps   no instala paquetes del sistema (solo copia careye)
+  --no-deps   no instala paquetes del sistema (solo copia careyess)
   --start     arranca Redshift al terminar, para aplicar ya la configuración
   -h, --help  muestra esta ayuda
 EOF
@@ -123,6 +123,29 @@ install_packages() {
     return 1
 }
 
+# Versión instalada, por ejemplo «1.12».
+redshift_version() {
+    redshift -V 2>/dev/null | awk 'NR == 1 {print $2}'
+}
+
+# Aviso informativo: última versión publicada de Redshift en upstream.
+check_redshift_latest() {
+    command -v curl >/dev/null 2>&1 || return 0
+    latest=$(curl -fsSL --max-time 6 \
+        https://api.github.com/repos/jonls/redshift/releases/latest 2>/dev/null |
+        sed -n 's/.*"tag_name": *"\([^"]*\)".*/\1/p' | head -n 1) || return 0
+    latest=${latest#v}
+    [ -n "$latest" ] || return 0
+    current=$(redshift_version)
+    [ -n "$current" ] || return 0
+    if [ "$latest" = "$current" ]; then
+        say "Redshift $current es la última versión publicada."
+    else
+        say "Aviso: la última versión publicada de Redshift es $latest y la instalada es $current."
+        say "       Si necesitás esa versión, compilala desde https://github.com/jonls/redshift"
+    fi
+}
+
 if [ "$WITH_DEPS" -eq 1 ]; then
     need=""
     have python3 || need="$need $PM_PY"
@@ -138,11 +161,13 @@ if [ "$WITH_DEPS" -eq 1 ]; then
             die "no se pudieron instalar las dependencias:$need"
     fi
 
+    check_redshift_latest
+
     if ! have redshift-gtk; then
         if [ -n "$PM_RSGTK" ] && install_packages "$PM_RSGTK" >/dev/null 2>&1; then
             say "redshift-gtk instalado: bandeja del sistema disponible."
         else
-            say "Aviso: redshift-gtk no está disponible; careye arrancará Redshift directamente."
+            say "Aviso: redshift-gtk no está disponible; careyess arrancará Redshift directamente."
         fi
     fi
 fi
@@ -154,12 +179,12 @@ have redshift || die "falta redshift (sudo apt install redshift)"
 # --- archivos -------------------------------------------------------------
 
 install -d "$BIN" "$APPS" "$ICONS" "$AUTOSTART"
-install -m 755 "$SRC/careye.py" "$BIN/careye"
-install -m 755 "$SRC/careye-redshift" "$BIN/careye-redshift"
-install -m 644 "$SRC/careye.desktop" "$APPS/careye.desktop"
-install -m 644 "$SRC/careye.svg" "$ICONS/careye.svg"
+install -m 755 "$SRC/careyess.py" "$BIN/careyess"
+install -m 755 "$SRC/careyess-redshift" "$BIN/careyess-redshift"
+install -m 644 "$SRC/careyess.desktop" "$APPS/careyess.desktop"
+install -m 644 "$SRC/careyess.svg" "$ICONS/careyess.svg"
 
-python3 - "$BIN/careye" <<'PY' || die "careye.py no compila"
+python3 - "$BIN/careyess" <<'PY' || die "careyess.py no compila"
 import sys
 
 source = open(sys.argv[1], encoding="utf-8").read()
@@ -167,23 +192,26 @@ compile(source, sys.argv[1], "exec")
 PY
 
 # El lanzador del menú apunta a la ruta real de instalación.
-sed -i "s|^Exec=.*|Exec=$BIN/careye|; s|^TryExec=.*|TryExec=$BIN/careye|" \
-    "$APPS/careye.desktop"
+sed -i "s|^Exec=.*|Exec=$BIN/careyess|; s|^TryExec=.*|TryExec=$BIN/careyess|" \
+    "$APPS/careyess.desktop"
 
-# Restos de la versión anterior («Color de pantalla»).
-rm -f "$BIN/redshift-color" "$BIN/redshift-gtk-single" \
+# Restos de versiones anteriores (careye y «Color de pantalla»).
+rm -f "$BIN/careye" "$BIN/careye-redshift" \
+      "$APPS/careye.desktop" "$ICONS/careye.svg" \
+      "$AUTOSTART/careye-redshift.desktop" \
+      "$BIN/redshift-color" "$BIN/redshift-gtk-single" \
       "$APPS/redshift-color.desktop"
 
 # Con redshift-gtk, el paquete ya trae su propio arranque automático.
 if have redshift-gtk; then
-    rm -f "$AUTOSTART/careye-redshift.desktop"
+    rm -f "$AUTOSTART/careyess-redshift.desktop"
 else
-    cat >"$AUTOSTART/careye-redshift.desktop" <<EOF
+    cat >"$AUTOSTART/careyess-redshift.desktop" <<EOF
 [Desktop Entry]
 Type=Application
-Name=Careye — filtro de Redshift
-Comment=Mantiene el color de pantalla configurado en careye
-Exec=$BIN/careye-redshift
+Name=Careyess — filtro de Redshift
+Comment=Mantiene el color de pantalla configurado en careyess
+Exec=$BIN/careyess-redshift
 Terminal=false
 NoDisplay=true
 X-GNOME-Autostart-enabled=true
@@ -198,9 +226,9 @@ if have gtk-update-icon-cache; then
 fi
 
 if [ "$START_NOW" -eq 1 ]; then
-    "$BIN/careye-redshift" || true
+    "$BIN/careyess-redshift" || true
     say "Redshift arrancado con tu configuración."
 fi
 
 say ""
-say "Listo. Abrí «Careye» desde el menú, o ejecutá: $BIN/careye"
+say "Listo. Abrí «Careyess» desde el menú, o ejecutá: $BIN/careyess"
