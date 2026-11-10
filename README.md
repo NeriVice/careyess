@@ -1,7 +1,7 @@
-# Color de pantalla — GUI para Redshift
+# Careye — color de pantalla para Redshift
 
 Ventana GTK sencilla para **elegir el tono y el brillo de la pantalla** sin editar
-`redshift.conf` a mano. Pensada para Xfce/Linux Mint, pero funciona en cualquier
+`redshift.conf` a mano. Pensada para Xfce/Linux Mint, funciona en cualquier
 escritorio con X11 y GTK3.
 
 ![Ajuste rápido](screenshots/ajuste-rapido.png)
@@ -14,6 +14,8 @@ escritorio con X11 y GTK3.
   la programación para que Redshift cambie solo según la hora.
 - Escribe `~/.config/redshift.conf` (guardando una copia `.bak`) y reinicia
   Redshift para aplicar el cambio.
+- **Arranca solo al iniciar sesión:** el instalador deja Redshift aplicando tu
+  configuración sin que tengas que abrir nada.
 - **Sin vistas previas en vivo a propósito:** si la ventana aplicara el color por
   su cuenta, el servicio de Redshift lo reaplicaría a los pocos segundos y la
   pantalla parpadearía entre tonos. Aquí solo se toca la pantalla al pulsar
@@ -26,8 +28,12 @@ escritorio con X11 y GTK3.
 ## Requisitos
 
 - Linux con **X11** (Redshift usa `randr`; en Wayland puro puede no aplicarse).
-- `redshift` y `redshift-gtk` (en Debian/Ubuntu/Mint: `sudo apt install redshift redshift-gtk`).
-- `python3` con **PyGObject** y GTK3 (`python3-gi`, `gir1.2-gtk-3.0`).
+- `redshift` y Python 3 con PyGObject/GTK3.
+- `redshift-gtk` es opcional: si está, se usa su bandeja; si no, careye arranca
+  `redshift` directamente con la configuración guardada.
+
+**No hace falta instalarlos a mano:** `install.sh` detecta lo que falta y lo
+instala con el gestor de paquetes de la distribución (apt, dnf, pacman o zypper).
 
 ## Instalación
 
@@ -37,26 +43,41 @@ cd redshift-color
 ./install.sh
 ```
 
-El instalador copia el programa en `~/.local/bin`, el lanzador en
-`~/.local/share/applications` y deja la entrada **Color de pantalla** en el menú.
+El instalador:
 
-Instalación manual:
+1. Instala lo que falte del sistema (Python 3, PyGObject con GTK3, Redshift y,
+   cuando existe, `redshift-gtk`). Pide la contraseña de sudo si hace falta.
+2. Copia el programa en `~/.local/bin/careye` y el lanzador de una sola
+   instancia en `~/.local/bin/careye-redshift`.
+3. Instala el icono y deja la entrada **Careye** en el menú.
+4. Deja Redshift arrancando solo al iniciar sesión (si no usás `redshift-gtk`,
+   que ya trae el suyo).
+5. Borra los restos de la versión anterior, que se llamaba «Color de pantalla».
+
+Opciones:
 
 ```sh
-install -m 755 redshift-color.py   ~/.local/bin/redshift-color
-install -m 755 redshift-gtk-single ~/.local/bin/redshift-gtk-single
-install -m 644 redshift-color.desktop ~/.local/share/applications/
-# edita Exec= con la ruta absoluta a ~/.local/bin/redshift-color
+./install.sh --no-deps   # solo copia careye, no toca paquetes del sistema
+./install.sh --start     # además arranca Redshift al terminar
 ```
 
 ## Uso
 
-1. Abre **Color de pantalla** desde el menú (busca *color* o *redshift*).
-2. Elige el tono: a la derecha (5500–6500 K) se ve más neutro/claro; a la
+1. Abrí **Careye** desde el menú (buscá *careye* o *color*), o ejecutá
+   `careye` en una terminal.
+2. Elegí el tono: a la derecha (5500–6500 K) se ve más neutro/claro; a la
    izquierda (2700–3400 K) más cálido y anaranjado.
-3. Ajusta el brillo si quieres atenuar el filtro.
-4. Pulsa **Guardar como color fijo** (o **Guardar programación** en la pestaña
+3. Ajustá el brillo si querés atenuar el filtro.
+4. Pulsá **Guardar como color fijo** (o **Guardar programación** en la pestaña
    Automático). Redshift se reinicia y mantiene el ajuste.
+
+Desde la terminal:
+
+```sh
+careye                     # abre en Ajuste rápido
+careye --tab auto          # abre en Automático
+careye --version
+```
 
 > Guardar tarda un segundo y la pantalla pasa brevemente por un tono neutro
 > mientras Redshift se reinicia: es normal.
@@ -76,8 +97,10 @@ Al guardar se reinicia Redshift (`pkill` + lanzador de instancia única). Antes 
 arrancarlo se neutraliza la rampa con `redshift -x`; si no, al reiniciar sobre una
 pantalla ya cálida el filtro se multiplica y la pantalla queda cada vez más oscura.
 
-El script `redshift-gtk-single` evita que se lancen dos instancias de Redshift a
-la vez (dos instancias aplican rampas distintas y producen parpadeos).
+El script `careye-redshift` evita que se lancen dos instancias de Redshift a la
+vez (dos instancias aplican rampas distintas y producen parpadeos). Si existe
+`redshift-gtk` lo usa; si no, arranca `redshift -c ~/.config/redshift.conf`, que
+aplica el filtro igual, sin icono de bandeja.
 
 ## Desinstalar
 
@@ -90,11 +113,11 @@ No borra tu `~/.config/redshift.conf`.
 ## Problemas conocidos
 
 - **Wayland:** Redshift necesita `randr`; en Wayland puro el ajuste puede no
-  aplicarse. Usa una sesión X11 (Xfce, Mate, Cinnamon con Xorg).
-- **La pantalla se ve oscura:** el brillo del panel no lo controla Redshift; usa
+  aplicarse. Usá una sesión X11 (Xfce, Mate, Cinnamon con Xorg).
+- **La pantalla se ve oscura:** el brillo del panel no lo controla Redshift; usá
   las teclas de brillo. El ajuste de esta ventana solo afecta al filtro de color.
-- Si algo queda raro, reinicia Redshift a mano:
-  `pkill -x redshift && redshift-gtk &`
+- Si algo queda raro, reiniciá Redshift a mano:
+  `pkill -x redshift && careye-redshift &`
 
 ## Licencia
 

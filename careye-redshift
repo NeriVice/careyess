@@ -1,0 +1,32 @@
+#!/bin/sh
+# careye-redshift — arranca Redshift una sola vez.
+#
+# Usa redshift-gtk si está instalado (bandeja del sistema). Si no, arranca
+# el propio redshift con la configuración que escribe la ventana de careye,
+# así el filtro funciona aunque el paquete redshift-gtk no exista.
+set -eu
+
+CONF="${REDSHIFT_CONF:-${XDG_CONFIG_HOME:-$HOME/.config}/redshift.conf}"
+
+# Un proceso zombie también aparece en ps: hay que ignorarlo para no
+# bloquear el arranque tras reiniciar Redshift desde la ventana.
+running=0
+for state in $(ps -C redshift -o stat= 2>/dev/null); do
+    case "$state" in
+        Z*) ;;
+        *) running=1 ;;
+    esac
+done
+[ "$running" -eq 1 ] && exit 0
+
+RUNDIR="${XDG_RUNTIME_DIR:-/tmp}"
+[ -d "$RUNDIR" ] || RUNDIR=/tmp
+LOCK="$RUNDIR/careye-redshift-$(id -u).lock"
+exec 9>"$LOCK"
+flock -n 9 || exit 0
+
+if command -v redshift-gtk >/dev/null 2>&1; then
+    exec redshift-gtk "$@"
+fi
+
+exec redshift -c "$CONF" "$@"

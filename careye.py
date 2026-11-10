@@ -1,16 +1,18 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
-"""Color de pantalla — control gráfico de Redshift para Xfce.
+"""Careye — control gráfico de Redshift para Xfce.
 
-Permite elegir la temperatura de color y el brillo con vista previa
-inmediata, y guardar el ajuste en ~/.config/redshift.conf para que
-Redshift lo mantenga (fijo o siguiendo la hora del día).
+Permite elegir la temperatura de color y el brillo de la pantalla y
+guardar el ajuste en ~/.config/redshift.conf para que Redshift lo
+mantenga (fijo o siguiendo la hora del día).
 """
 
+import argparse
 import os
 import re
 import shutil
 import subprocess
+import sys
 import tempfile
 import time
 
@@ -20,9 +22,9 @@ gi.require_version("Gdk", "3.0")
 gi.require_version("Gtk", "3.0")
 from gi.repository import Gdk, GLib, Gtk  # noqa: E402
 
-__version__ = "1.0.0"
+__version__ = "1.1.0"
 
-APP_ID = "org.local.RedshiftColor"
+APP_ID = "org.careye.Careye"
 CONF = os.environ.get(
     "REDSHIFT_CONF",
     os.path.join(
@@ -33,16 +35,16 @@ CONF = os.environ.get(
 
 
 def _find_launcher():
-    """Ruta del lanzador de una sola instancia (o 'redshift-gtk' del sistema)."""
+    """Ruta del lanzador de una sola instancia que instala careye, o None."""
     here = os.path.dirname(os.path.realpath(__file__))
     for candidate in (
-        os.path.join(here, "redshift-gtk-single"),
-        os.path.expanduser("~/.local/bin/redshift-gtk-single"),
-        "/usr/local/bin/redshift-gtk-single",
+        os.path.join(here, "careye-redshift"),
+        os.path.expanduser("~/.local/bin/careye-redshift"),
+        "/usr/local/bin/careye-redshift",
     ):
         if os.access(candidate, os.X_OK):
             return candidate
-    return "redshift-gtk"
+    return None
 
 
 LAUNCHER = _find_launcher()
@@ -239,10 +241,15 @@ def restart_daemon():
         )
     except (OSError, subprocess.SubprocessError):
         pass
-    launcher = LAUNCHER if os.access(LAUNCHER, os.X_OK) else "redshift-gtk"
+    if LAUNCHER is not None:
+        argv = [LAUNCHER]
+    else:
+        gtk_launcher = shutil.which("redshift-gtk")
+        # Sin bandeja, el propio Redshift mantiene el filtro con esta config.
+        argv = [gtk_launcher] if gtk_launcher else ["redshift", "-c", CONF]
     try:
         subprocess.Popen(
-            [launcher],
+            argv,
             stdout=DEVNULL,
             stderr=DEVNULL,
             start_new_session=True,
@@ -272,12 +279,12 @@ def describe(temp):
 # --------------------------------------------------------------------------
 # Interfaz
 # --------------------------------------------------------------------------
-class ColorWindow(Gtk.ApplicationWindow):
-    def __init__(self, application):
-        super().__init__(application=application, title="Color de pantalla")
+class CareyeWindow(Gtk.ApplicationWindow):
+    def __init__(self, application, page=0):
+        super().__init__(application=application, title="Careye")
         self.set_default_size(560, 530)
         self.set_position(Gtk.WindowPosition.CENTER)
-        self.set_icon_name("redshift")
+        self.set_icon_name("careye")
 
         self._dirty = False
 
@@ -296,6 +303,7 @@ class ColorWindow(Gtk.ApplicationWindow):
 
         self._install_css()
         self._build(now_temp, now_bright, conf)
+        self.page = page
         self.connect("key-press-event", self._on_key)
         GLib.idle_add(self._update_status)
 
@@ -323,7 +331,7 @@ class ColorWindow(Gtk.ApplicationWindow):
         header.set_margin_end(20)
 
         titles = Gtk.Box(orientation=Gtk.Orientation.VERTICAL, spacing=1)
-        title = Gtk.Label(label="Color de pantalla", xalign=0)
+        title = Gtk.Label(label="Careye", xalign=0)
         title.get_style_context().add_class("app-title")
         subtitle = Gtk.Label(label="Filtro de luz azul · Redshift", xalign=0)
         subtitle.get_style_context().add_class("hint")
@@ -338,7 +346,7 @@ class ColorWindow(Gtk.ApplicationWindow):
         header.pack_end(self.saved_label, False, False, 0)
         outer.pack_start(header, False, False, 0)
 
-        notebook = Gtk.Notebook()
+        notebook = self.notebook = Gtk.Notebook()
         notebook.set_margin_start(18)
         notebook.set_margin_end(18)
         outer.pack_start(notebook, True, True, 0)
@@ -634,18 +642,21 @@ class ColorWindow(Gtk.ApplicationWindow):
         return False
 
 
-class ColorApp(Gtk.Application):
-    def __init__(self):
+class CareyeApp(Gtk.Application):
+    def __init__(self, page=0):
         super().__init__(application_id=APP_ID)
-        GLib.set_prgname("redshift-color")
-        GLib.set_application_name("Color de pantalla")
+        GLib.set_prgname("careye")
+        GLib.set_application_name("Careye")
+        self.page = page
         self.window = None
 
     def do_activate(self):
         if self.window is None:
-            self.window = ColorWindow(self)
+            self.window = CareyeWindow(self, self.page)
             self.window.connect("destroy", self._on_destroy)
             self.window.show_all()
+            # La pestaña se elige ya mostrada: antes de mostrar, GTK la reinicia.
+            self.window.notebook.set_current_page(self.window.page)
         self.window.present()
 
     def _on_destroy(self, _window):
@@ -653,8 +664,22 @@ class ColorApp(Gtk.Application):
         self.quit()
 
 
-def main():
-    return ColorApp().run([])
+def main(argv=None):
+    parser = argparse.ArgumentParser(
+        prog="careye",
+        description="Careye — filtro de luz azul (Redshift) con ventana GTK.",
+    )
+    parser.add_argument(
+        "--tab",
+        choices=("quick", "auto"),
+        default="quick",
+        help="pestaña con la que abre: quick (ajuste rápido) o auto (automático)",
+    )
+    parser.add_argument(
+        "--version", action="version", version="careye {0}".format(__version__)
+    )
+    args = parser.parse_args(sys.argv[1:] if argv is None else argv)
+    return CareyeApp(0 if args.tab == "quick" else 1).run([])
 
 
 if __name__ == "__main__":
