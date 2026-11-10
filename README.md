@@ -40,8 +40,8 @@ instala con el gestor de paquetes de la distribución (apt, dnf, pacman o zypper
 ## Instalación
 
 ```sh
-git clone https://github.com/NeriVice/redshift-color.git
-cd redshift-color
+git clone https://github.com/NeriVice/careyess.git
+cd careyess
 ./install.sh
 ```
 
